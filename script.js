@@ -14,7 +14,7 @@ const world = {
 const camera = {
     x: 0,
     y: 0,
-    smoothFactor: 0.05 // Determines how smoothly the camera follows the thief
+    smoothFactor: 0.1 // Increased for faster camera following
 };
 
 // Game variables
@@ -93,13 +93,18 @@ class PoliceCar {
     constructor() {
         this.width = 50;
         this.height = 100;
-        // Spawn police cars at a random distance from the thief
-        const spawnDistance = 800; // Distance from thief
-        const angle = Math.random() * 2 * Math.PI;
-        this.x = thiefCar.x + spawnDistance * Math.cos(angle);
-        this.y = thiefCar.y + spawnDistance * Math.sin(angle);
         this.speed = 5; // Increased speed for police cars
         this.color = 'red';
+        this.spawnOutsideView();
+    }
+
+    spawnOutsideView() {
+        // Define the spawn distance slightly beyond the visible canvas
+        const spawnDistance = Math.max(canvas.width, canvas.height) / 2 + 150; // Increased buffer
+        const angle = Math.random() * 2 * Math.PI;
+
+        this.x = thiefCar.x + spawnDistance * Math.cos(angle);
+        this.y = thiefCar.y + spawnDistance * Math.sin(angle);
     }
 
     update() {
@@ -124,7 +129,7 @@ class PoliceCar {
         ctx.rotate(rad);
         ctx.fillStyle = this.color;
         ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        // Optional: Add details like windows or stripes
+        // Add details like windows or stripes
         ctx.fillStyle = 'black';
         ctx.fillRect(-this.width / 2 + 10, -this.height / 2 + 20, 30, 20); // Example window
         ctx.restore();
@@ -163,10 +168,44 @@ function drawThief() {
     ctx.rotate(thiefCar.angle * (Math.PI / 180)); // Rotate the canvas to the car's angle
     ctx.fillStyle = 'blue';
     ctx.fillRect(-thiefCar.width / 2, -thiefCar.height / 2, thiefCar.width, thiefCar.height);
-    // Optional: Add details like windows or patterns
+    // Add details like windows or patterns
     ctx.fillStyle = 'black';
     ctx.fillRect(-thiefCar.width / 2 + 10, -thiefCar.height / 2 + 20, 30, 20); // Example window
     ctx.restore(); // Restore the canvas state
+}
+
+// Draw background with white square tiles
+function drawBackground() {
+    const tileSize = 50; // Reduced tile size for better movement visibility
+
+    // Calculate the number of tiles needed to cover the canvas
+    const cols = Math.ceil(canvas.width / tileSize) + 2;
+    const rows = Math.ceil(canvas.height / tileSize) + 2;
+
+    // Calculate the starting tile's world coordinates
+    const startX = Math.floor(camera.x / tileSize) * tileSize;
+    const startY = Math.floor(camera.y / tileSize) * tileSize;
+
+    // Calculate the offset based on the camera's position
+    const offsetX = -(camera.x - startX);
+    const offsetY = -(camera.y - startY);
+
+    // Fill the background with black
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Set the stroke style for the grid lines
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1;
+
+    // Draw the grid of white square tiles
+    for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+            const x = i * tileSize + offsetX;
+            const y = j * tileSize + offsetY;
+            ctx.strokeRect(x, y, tileSize, tileSize);
+        }
+    }
 }
 
 // Clear canvas
@@ -187,7 +226,7 @@ function updateCamera() {
 
 // Game loop
 function gameLoop() {
-    clearCanvas();
+    drawBackground();
     updateThief();
     updateCamera();
     drawThief();
